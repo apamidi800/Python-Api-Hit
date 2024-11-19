@@ -1,0 +1,217 @@
+set bucketPath = 's3://pgr-quoting-core-dev-aws35d-data/seo_clarity/logs/';
+
+CREATE OR REPLACE STAGE dacq_exp.raw.seoclarity_stage
+    URL = $bucketPath
+    STORAGE_INTEGRATION = PGRAWS35D_DACQ_EXP_INGESTION
+    FILE_FORMAT = (TYPE = JSON);
+    
+CREATE OR REPLACE TABLE dacq_exp.raw.seoclarity_main (
+    log VARIANT,
+    s3_file_name STRING,
+    s3_file_row INT
+);
+
+
+COPY INTO dacq_exp.raw.seoclarity_main FROM (    
+    SELECT
+        PARSE_JSON($1) AS log,
+        METADATA$FILENAME::STRING AS s3_file_name,
+        METADATA$FILE_ROW_NUMBER::INT AS s3_file_row
+    FROM
+        @dacq_exp.raw.seoclarity_stage
+);
+SELECT * FROM dacq_exp.raw.seoclarity_main LIMIT 10;
+
+CREATE OR REPLACE TABLE dacq_exp.target.seoclarity_main (
+    name STRING,
+    "date" FLOAT,
+    highestTrueRank INT,
+    highestWebRank INT,
+    highestRankUrl STRING,
+    highestLocalRank INT,
+    highestNewsRank INT,
+    highestImageRank INT,
+    highestVideoRank INT,
+    avgSearchVolume INT,
+    competitors VARIANT,
+    engine STRING,
+    device STRING,
+    s3_file_name STRING,
+    s3_file_row INT
+);
+
+
+INSERT INTO dacq_exp.target.seoclarity_main (
+    SELECT
+        log:name AS name,
+        log:"date" AS "date",
+        log:highestTrueRank AS highestTrueRank,
+        log:highestWebRank AS highestWebRank,
+        log:highestRankUrl AS highestRankUrl,
+        log:highestLocalRank AS highestLocalRank,
+        log:highestNewsRank AS highestNewsRank,
+        log:highestImageRank AS highestImageRank,
+        log:highestVideoRank AS highestVideoRank,
+        log:avgSearchVolume AS avgSearchVolume,
+        log:competitors AS competitors,
+        log:engine AS engine,
+        log:device AS device,
+        s3_file_name AS s3_file_name,
+        s3_file_row AS s3_file_row
+    FROM
+        dacq_exp.raw.seoclarity_main
+);
+
+SELECT * FROM dacq_exp.target.seoclarity_main LIMIT 10;
+
+'----------------------------------------------',
+CREATE OR REPLACE VIEW dacq_exp.target.seoclarity_union_view AS
+  With select_JSON
+  AS 
+SELECT TOP 100
+    c.value:competitorName::VARCHAR(100) AS searchValue,
+    m."date" AS searchDate,
+    cast(m.engine AS VARCHAR(20)) AS engine,
+    m.device AS device,
+    c.value:rank::VARCHAR AS searchRank,
+    c.value:landingPage::VARCHAR  AS searchURL,
+    NULL AS highestWebRank,
+    NULL AS highestLocalRank,
+    NULL AS highestNewsRank,
+    NULL AS highestImageRank,
+    NULL AS highestVideoRank,
+    NULL AS avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM dacq_exp.target.seoclarity_main AS m,
+    LATERAL FLATTEN(input => parse_json(competitors):competitor) AS c
+UNION ALL
+SELECT
+    name,
+    "date",
+    engine,
+    device,
+    highestTrueRank,
+    highestRankUrl,
+    highestWebRank,
+    highestLocalRank,
+    highestNewsRank,
+    highestImageRank,
+    highestVideoRank,
+    avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM
+    dacq_exp.target.seoclarity_main;
+'----------------------------------------------',
+
+CREATE OR REPLACE VIEW dacq_exp.target.seoclarity_competitor_union AS
+WITH parsed_json AS (
+SELECT TOP 1
+    PARSE_JSON($1) AS log,
+    METADATA$FILENAME::STRING AS s3_file_name,
+    METADATA$FILE_ROW_NUMBER::INT AS s3_file_row
+FROM
+    @dacq_exp.raw.seoclarity_stage
+)
+, ranking_data AS ( 
+SELECT
+    log:name AS name,
+    log:"date" AS "date",
+    log:highestTrueRank AS highestTrueRank,
+    log:highestWebRank AS highestWebRank,
+    log:highestRankUrl AS highestRankUrl,
+    log:highestLocalRank AS highestLocalRank,
+    log:highestNewsRank AS highestNewsRank,
+    log:highestImageRank AS highestImageRank,
+    log:highestVideoRank AS highestVideoRank,
+    log:avgSearchVolume AS avgSearchVolume,
+    log:competitors AS competitors,
+    log:engine AS engine,
+    log:device AS device,
+    s3_file_name AS s3_file_name,
+    s3_file_row AS s3_file_row
+FROM
+    parsed_json
+)
+
+SELECT
+    m.name::STRING AS searchValue,
+    m."date"::STRING AS searchDate,
+    c.value:competitorName::VARCHAR(100) AS competiorName,
+    cast(m.engine AS VARCHAR(20)) AS engine,
+    m.device AS device,
+    c.value:rank::VARCHAR AS searchRank,
+    c.value:landingPage::VARCHAR  AS searchURL,
+    NULL AS highestWebRank,
+    NULL AS highestLocalRank,
+    NULL AS highestNewsRank,
+    NULL AS highestImageRank,
+    NULL AS highestVideoRank,
+    NULL AS avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM ranking_data AS m,
+    LATERAL FLATTEN(input => parse_json(competitors):competitor) AS c
+UNION ALL
+SELECT
+    name,
+    "date",
+    NULL AS competitorName,
+    engine,
+    device,
+    highestTrueRank,
+    highestRankUrl,
+    highestWebRank,
+    highestLocalRank,
+    highestNewsRank,
+    highestImageRank,
+    highestVideoRank,
+    avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM
+    ranking_data;
+
+SELECT * FROM dacq_exp.target.seoclarity_competitor_union LIMIT 100
+
+
+
+Select searchdate,count(*) as RowCount
+from DACQ_EXP.TARGET.SEOCLARITY_UNION_VIEW
+group by SEARCHDATE
+order by 1 desc
+
+LIST @dacq_exp.raw.seoclarity_stage;
+
+WITH date_series AS (
+    SELECT
+        DATEADD(day, seq4(), '2024-06-01') AS date
+    FROM
+        TABLE(GENERATOR(ROWCOUNT => 142))
+)
+SELECT
+    date_series.date
+FROM
+    date_series
+LEFT JOIN
+    (SELECT DISTINCT TO_DATE(searchDate) AS date FROM DACQ_EXP.TARGET.SEOCLARITY_UNION_VIEW) AS existing_dates
+ON
+    date_series.date = existing_dates.date
+WHERE
+    existing_dates.date IS NULL
+ORDER BY
+    date_series.date;
+
+
+
+SELECT DISTINCT searchDate FROM DACQ_EXP.TARGET.SEOCLARITY_UNION_VIEW;
+
+
+
+Samuel Benya | they • them • their
+Data Engineer Senior | Personal Lines – Direct Acquisition
+
+
+
+https://github.com/Premfer/Python-Api-Hit
