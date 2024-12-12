@@ -1,0 +1,151 @@
+CREATE PIPE dacq_exp.raw.seoclaritypipe
+  AUTO_INGEST = TRUE
+  AS
+	COPY INTO dacq_exp.raw.seoclarity_main FROM (    
+    SELECT
+        PARSE_JSON($1) AS log,
+        METADATA$FILENAME::STRING AS s3_file_name,
+        METADATA$FILE_ROW_NUMBER::INT AS s3_file_row
+    FROM @dacq_exp.raw.seoclarity_stage
+                                                     
+);
+
+SHOW PIPES;
+
+
+
+
+create or replace  stream dacq_exp.raw.seoclarity_main_append_only_s on table dacq_exp.raw.seoclarity_main append_only=true;
+
+create or replace  stream dacq_exp.raw.seoclarity_main_keyword_append_only_s on table dacq_exp.raw.seoclarity_main append_only=true;
+
+
+CREATE OR REPLACE TASK target_main_task
+  SCHEDULE = 'USING CRON 30 3 * * * America/New_York'
+  AS 
+ INSERT INTO dacq_exp.target.seoclarity_main (
+    SELECT
+        log:name AS name,
+        to_varchar(to_date(to_varchar(log:"date"), 'YYYYMMDD'), 'YYYY-MM-DD' ) AS "date",
+        log:highestTrueRank AS highestTrueRank,
+        log:highestWebRank AS highestWebRank,
+        log:highestRankUrl AS highestRankUrl,
+        log:highestLocalRank AS highestLocalRank,
+        log:highestNewsRank AS highestNewsRank,
+        log:highestImageRank AS highestImageRank,
+        log:highestVideoRank AS highestVideoRank,
+        log:avgSearchVolume AS avgSearchVolume,
+        log:competitors AS competitors,
+        log:engine AS engine,
+        log:device AS device,
+        s3_file_name AS s3_file_name,
+        s3_file_row AS s3_file_row
+    FROM
+        dacq_exp.raw.seoclarity_main_append_only_s);
+		
+		
+CREATE OR REPLACE TASK target_keyword_task
+  SCHEDULE = 'USING CRON 30 3 * * * America/New_York'
+  AS 
+ INSERT INTO dacq_exp.target.seoclarity_union_keyword (SELECT
+  KEYWORDTHEME,
+  searchrank as rank,
+  CASE
+    WHEN (searchrank >0 AND searchrank <101) THEN CAST(POWER(CAST(searchrank AS decimal(10, 4)),-0.95359248)*0.175 AS decimal(10, 4))
+    WHEN searchrank=101 THEN 0
+  ELSE
+  searchrank
+END AS ClickShare,
+  competitors AS Domain,
+  searchurl AS FullURL,
+  CASE
+    WHEN searchurl LIKE '%agent%' OR searchurl LIKE '%agency%' THEN 'Yes'
+  ELSE
+  'No'
+END AS AgentPage,
+  serp.searchvalue AS keyword,
+  DAYOFCREATEDDATE as CreatedDate,
+  FUNNEL,
+  ANSWERS,
+  STATEKEYWORD,
+  LIFELANES,
+  CASE
+WHEN device like '%d%' then 'Desktop'
+WHEN device like '%m%' THEN 'Mobile'
+else device
+end as device,
+  searchdate AS Date,
+competitors as Competitor,
+  ESTIMATEDAVERAGEDAILYSEARCHVOLUME AS EstimatedAverageDailySearchVolume,
+  CAST (CASE
+      WHEN (device='Desktop' AND searchrank>0 AND searchrank <101) THEN ((CAST(POWER(CAST(searchrank AS decimal(10, 4)),-0.95359248)*0.175 AS decimal(10, 4)))*ESTIMATEDAVERAGEDAILYSEARCHVOLUME*0.5*DESKTOPQSR*DESKTOPLUP)
+      WHEN (device='Mobile' AND searchrank>0 AND searchrank<101) THEN ((CAST(POWER(CAST(searchrank AS decimal(10, 4)),-0.95359248)*0.175 AS decimal(10, 4)))*ESTIMATEDAVERAGEDAILYSEARCHVOLUME*0.5*MOBILEQSR*MOBILELUP)
+      WHEN searchrank=101 THEN 0
+    ELSE searchrank
+  END AS decimal(10, 4)) AS LUPValue,
+  INCLUDEDINMONTHLYSCORE,
+ KEYWORDGROUP,
+  LUPGROUP
+FROM
+   (SELECT
+    m.name AS searchValue,
+    m."date" AS searchDate,
+    cast(m.engine AS VARCHAR(20)) AS engine,
+    m.device AS device,
+    c.value:rank::VARCHAR AS searchRank,
+    c.value:landingPage::VARCHAR  AS searchURL,
+	c.value:competitorName::VARCHAR(100) As Competitors,
+    NULL AS highestWebRank,
+    NULL AS highestLocalRank,
+    NULL AS highestNewsRank,
+    NULL AS highestImageRank,
+    NULL AS highestVideoRank,
+    NULL AS avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM dacq_exp.raw.seoclarity_main_keyword_append_only_s AS m,
+    LATERAL FLATTEN(input => parse_json(competitors):competitor) AS c
+UNION ALL
+SELECT
+    name,
+    "date",
+    engine,
+    device,
+    highestTrueRank,
+    highestRankUrl,
+	NULL As Competitors,
+    highestWebRank,
+    highestLocalRank,
+    highestNewsRank,
+    highestImageRank,
+    highestVideoRank,
+    avgSearchVolume,
+    s3_file_name,
+    s3_file_row
+FROM
+    dacq_exp.raw.seoclarity_main_keyword_append_only_s) serp
+LEFT JOIN (
+ SELECT
+KEYWORD, 
+KEYWORDGROUP, 
+LUPGROUP, 
+KEYWORDTHEME, 
+DAYOFCREATEDDATE, 
+FUNNEL, 
+ANSWERS, 
+STATEKEYWORD, 
+BRAND, 
+LIFELANES, 
+INCLUDEDINMONTHLYSCORE, 
+MOZSPECIFICMSV, 
+ESTIMATEDAVERAGEDAILYSEARCHVOLUME, 
+DESKTOPDAILYSEARCHVOLUME, 
+MOBILEDAILYSEARCHVOLUME, 
+DESKTOPQSR, 
+MOBILEQSR, 
+DESKTOPSALEPERQS, 
+MOBILESALEPERQS, 
+DESKTOPLUP, 
+MOBILELUP
+FROM DACQ_EXP.TARGET.SEOKEYWORDLIST) monthly
+ON monthly.Keyword = serp.searchvalue);
