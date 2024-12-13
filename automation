@@ -17,7 +17,7 @@ SHOW PIPES;
 
 create or replace  stream dacq_exp.raw.seoclarity_main_append_only_s on table dacq_exp.raw.seoclarity_main append_only=true;
 
-create or replace  stream dacq_exp.raw.seoclarity_main_keyword_append_only_s on table dacq_exp.raw.seoclarity_main append_only=true;
+create or replace  stream dacq_exp.target.seoclarity_main_keyword_append_only_s on table dacq_exp.target.seoclarity_main append_only=true;
 
 
 CREATE OR REPLACE TASK target_main_task
@@ -45,7 +45,7 @@ CREATE OR REPLACE TASK target_main_task
 		
 		
 CREATE OR REPLACE TASK target_keyword_task
-  SCHEDULE = 'USING CRON 30 3 * * * America/New_York'
+  SCHEDULE = 'USING CRON 40 3 * * * America/New_York'
   AS 
  INSERT INTO dacq_exp.target.seoclarity_union_keyword (SELECT
   KEYWORDTHEME,
