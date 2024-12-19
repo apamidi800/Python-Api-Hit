@@ -1,0 +1,105 @@
+“onpagedata” API Call (Free)
+Return on page content of any Managed Page on the platform. (private, for more details, please access /help/metrics)
+Request Format
+Latest:
+http://api.seoclarity.net/seoClarity/metrics?access_token=XXXXXXXXXXXX&urls=XXXXXXXXXXXX&latest=true&lg=en
+Multiple URLs & Date Range
+http://api.seoclarity.net/seoClarity/metrics?access_token=XXXXXXXXXXXX!_!XXXXXXXXXXXX!_!XXXXXXXXXXXX&urls=XXXXXXXXXXXX&sDate=180701&eDate=180730&lg=en
+Parameters
+1. access_token
+• The access_token is a long string of letters and numbers that you include in API calls to let us know what user you are making the API call from and what permissions your app has for that user
+• Example: f854k534-o235-89ii-vmmo-iwefji4co89a
+2. URLs
+• Query URL spilt by string of ‘!_!’
+• Maximum size of urls is 10
+• Example: http://www.aaa.com%21_%21http//www.bbb.com
+• Parameter cannot be null
+3. latest
+• Last time the page was updated
+• Example: &latest=true
+• Doesn't require sDate and eDate
+4. sDate
+• Query Start date
+• Example: 20120501
+• The parameter cannot be null
+4. eDate
+• Query End date
+• Format is yyyymmdd
+• Example: 20120502
+• The parameter cannot be null
+Note: Only a 30 days ranking query is allowed
+Sample Response
+http://api.seoclarity.net/seoClarity/metrics?access_token=f4839706-96b2-4e93-8848-80fdadea5c83&urls=http://www.petvacationhomes.com/search/cityListing/st/Florida.html&latest=true&lg=en
+<urls> <urlMetrics> <url> http://www.petvacationhomes.com/search/cityListing/st/Florida.html </url> <trackDate>20170428</trackDate> <normalized_url> com.petvacationhomes/search/citylisting/st/florida.html </normalized_url> <normalized_url_hash_cd>af5c48cb6a8f6cf25f6d6b52412a83ca</normalized_url_hash_cd> <response_code>200</response_code> <title> Pet Friendly Florida Vacation Rentals Homes & Florida Pet Friendly Rentals - Florida Vacation Condos </title> <meta_keywords> Pet friendly Florida, Pet friendly florida vacation rentals, pet friendly vacation rentals florida, pet friendly vacation rentals in florida, florida pet friendly vacations, florida pet friendly vacation rentals, florida pet friendly, frienly florida rent </meta_keywords> <meta_desc> Find and rent Pet friendly, dog friendly Florida vacation rentals, Florida rental homes that allow dogs and pet friendly vacation condos rentals where cats and pets are permitted. There are hundreds of pet friendly Florida lodgings and Vacation Rentals... </meta_desc> <canonical_url/> <week_of_year>201717</week_of_year> <content> Find and rent Pet friendly, dog friendly Florida vacation rentals, Florida rental homes that allow dogs and pet friendly vacation condos rentals where cats and pets are permitted. There are hundreds of pet friendly Florida lodgings and Vacation Rentals... Search DestinationsHomeFind RentalsList RentalsOwner Section Send Page to FriendBrowse USA Browse Site By Clicking This Map Email Newsletter Sign-Up NowTop Destinations 1.Venice Florida Pet Friendly Rentals 2.Palm Coast FL Pet Friendly Rentals 3. Kissimmee Disney World Pets Allowed 4.Destin Vacation Rentals Homes 5.Clearwater Beach FL Dog Friendly Rentals 6.Cedar Key FL Dog Friendly Rentals 7.Cape San Blas FL Dogs Allowed Rentals 8.Hilton Head Vacation Rental 9.Fort Myers Florida Pets Allowed Rentals 10.Orlando Vacation Florida Rentals 11.South Lake Tahoe Vacation Rentals 12.North Carolina Outer Banks Pet Friendly Vacations Rentals Homes 13.North Carolina Smoky Mountains Rental Homes and Cabins Home -> USA -> Florida Vacation Rentals City or Neighborhood Listing Find and rent Pet friendly Florida Vacation Rentals Homes, Dog friendly Florida vacation rentals Lodgings, Florida rental homes that allow dogs and pet friendly vacation condos rentals where cats and pets are permitted. There are hundreds of pet friendly Florida lodgings and pet friendly accommodations in Florida for travelling with your pet dog/cat on Florida vacation. PetVacationHomes lists the widest selection of pet Dog friendly hotels in Florida where dogs permitted and pets welcome. We also list vacation rentals from owners that have dog friendly vacation homes rentals that allow dogs in
+Florida and also welcome cats. Your search for the perfect pet friendly Florida vacation lodgings and pet friendly accommodations ends right here! Name of City or NeighborhoodNo.of Property(s) Cape Coral, Florida Pet Friendly Lodging(2) Cape San Blas, Florida Pet Friendly Lodging(6) Cedar Key, Florida Pet Friendly Lodging(1) Clearwater Beach, Florida Pet Friendly Lodging(4) Davenport, Florida Pet Friendly Lodging(2) Daytona Beach, Florida Pet Friendly Lodging(24) Daytona Beach Shores, Florida Pet Friendly Lodging(1) Destin, Florida Pet Friendly Lodging(15) Flagler Beach, Florida Pet Friendly Lodging(28) Fort Lauderdale, Florida Pet Friendly Lodging(1) Fort Myers, Florida Pet Friendly Lodging(1) Fort Myers Beach, Florida Pet Friendly Lodging(2) Hollywood, Florida Pet Friendly Lodging(2) Jacksonville, Florida Pet Friendly Lodging(2) Key West, Florida Pet Friendly Lodging(1) Kissimmee, Florida Pet Friendly Lodging(19) Little Gasparilla Island, Florida Pet Friendly Lodging(1) Madeira Beach, Florida Pet Friendly Lodging(1) Marco Island, Florida Pet Friendly Lodging(1) Naples, Florida Pet Friendly Lodging(1) Nokomis, Florida Pet Friendly Lodging(1) North Captiva, Florida Pet Friendly Lodging(2) Orlando, Florida Pet Friendly Lodging(5) Ormond Beach, Florida Pet Friendly Lodging(16) Palm Coast, Florida Pet Friendly Lodging(70) Panama City Beach, Florida Pet Friendly Lodging(3) Pensacola, Florida Pet Friendly Lodging(1) Ponte Vedra Beach, Florida Pet Friendly Lodging(17) Saint Petersburg Beach, Florida Pet Friendly Lodging(1) Sanibel Island, Florida Pet Friendly Lodging (4) Santa Rosa Beach, Florida Pet Friendly Lodging(1) Sarasota, Florida Pet Friendly Lodging(1) Siesta Key, Florida Pet Friendly Lodging(2) St Augustine, Florida Pet Friendly Lodging(46) St Augustine Beach, Florida Pet Friendly Lodging(33) Venice, Florida Pet Friendly Lodging(22) Destination SearchFeatured City Venice Florida is the city on the Gulf. Click here now for ALL rentals. Travel & Pet News Pet Friendly Hurricane Advice & Shelters Pet of the week Cassie visits Venice FL Home of the week Hilton Head Island Luxury Condo Walk to the Beach !! What are Your Fellow Travelers Searching for at PetVacationHomes.com? Venice Florida Pet Friendly Rentals Palm Coast FL Pet Friendly Rentals Kissimmee Disney World Pets Allowed Destin Vacation Rentals Homes Clearwater Beach FL Dog Friendly Rentals Cedar Key FL Dog Friendly Rentals Cape San Blas FL Dogs Allowed Rentals Hilton Head Vacation Rental Fort Myers Florida Pets Allowed Rentals Orlando Vacation Florida Rentals South Lake Tahoe Vacation Rentals North Carolina Outer Banks Pet Friendly Vacations Rentals Homes North Carolina Smoky Mountains Rental Homes and Cabins | About | Ads | Contact | FAQ | Jobs | Disclaimer | Privacy | Sitemap | PetVacationHomes.com PO Box 50433 Jacksonville, FL 32240 Pet Vacation Homes Copyright © Pet Vacation Homes. </content> </urlMetrics> </urls>
+
+
+“cityranking” API Call (Free)
+The City ranking API call is built specifically to allow for retrieval of local ranking data.
+You must have CityRank enabled in your account and keywords assigned to cities for data to be returned through this call.
+Request Format
+http://api.seoclarity.net/seoClarity/cityranking?access_token=XXXXXXXX&kName=xxxxx&engine=google&market=xx-xx&sdate=yyyymmdd&edate=yyyymmdd&limit=X&offset=X&cityid=x&top=x
+Parameters
+1. access_token
+• The access_token is a long string of letters and numbers that you include in API calls to let us know what user you are making the API call and what permissions your app has for that user
+2. kName
+• Keyword Name without encode
+• Parameter cannot be null
+3. Engine
+• Search engine (we support google, bing, yahoo, baidu, naver)
+• Parameter cannot be null
+4. Market
+• Market name
+• Parameter cannot be null
+5. sDate
+• Query start date
+• Example: 20120501
+• Parameter cannot be null
+6. edate
+Query end date, cannot be null.
+Example: 20120502
+7. limit
+Specify the maximum number of rows of return. This parameter could be null.
+Default value is 10 and the maximum value is 100.
+8. offset
+Specify the offset of the first row of return. This parameter could be null.
+The default value is 0.
+9. top
+Specify the number of results of return. This parameter could be null.
+The default value is 100.
+10. cityid
+City Id, can't be null.
+Example: cityid=5 Chicago IL
+Sample Response
+http://api.seoclarity.net/seoClarity/cityranking?access_token=XXXXX&kName=downtown+venice+fl&engine=google&market=en-us&sdate=20140901&edate=20140931&limit=10&cityid=2
+<keywords>
+<keyword>
+<name>downtown venice fl</name>
+<cityName>New York, NY</cityName>
+<date>20140901</date>
+<records>
+<record>
+<Type>Image</Type>
+<LandingPage>
+http://www.google.com/search?q=downtown+venice+fl&hl=en&near=new+york,+ny&tbm=isch&tbo=u&source=univ&sa=X&ei=ei4EVI2oEOGJiwLXi4CYBA&ved=0CCkQ7Ak
+</LandingPage>
+<Ranking>1</Ranking>
+</record>
+<record>
+<Type>Web</Type>
+<LandingPage>http://www.venicemainstreet.com/%3C/LandingPage>
+<Ranking>2</Ranking>
+</record>
+<record>
+<Type>Web</Type>
+<LandingPage>
+http://www.venicemainstreet.com/index.php/business-directory/categories/shopping
+</LandingPage>
+<Ranking>3</Ranking>
+</record>
+…
+</records>
+</keyword>
+…
+…
+</keywords>
